@@ -154,7 +154,7 @@ export const HeaderNavigationBase = ({
                                             )
                                         }
                                     >
-                                        <Avatar alt="Olivia Rhye" src="https://www.untitledui.com/images/avatars/olivia-rhye?bg=%23E0E0E0" size="md" />
+                                        <Avatar alt="Linh Nguyen" src="https://www.untitledui.com/images/avatars/olivia-rhye?bg=%23E0E0E0" size="md" />
                                     </AriaButton>
                                     <Popover
                                         placement="bottom right"

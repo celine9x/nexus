@@ -1,0 +1,19 @@
+{
+  "alliances": [
+    {
+      "id": 1,
+      "title": "The first one"
+    }
+  ],
+  "agreements": [],
+  "opportunities": [
+    {
+      "title": "This is the first one",
+      "agreement_id": null,
+      "alliance_id": null,
+      "id": 1,
+      "alliance": null,
+      "agreement": null
+    }
+  ]
+}

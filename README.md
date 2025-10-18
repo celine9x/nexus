@@ -1,6 +1,6 @@
 # Untitled UI starter kit for Vite
 
-This is an official Untitled UI starter kit for Vite. Kickstart your Untitled UI project with Vite in seconds.
+
 
 ## Untitled UI React
 

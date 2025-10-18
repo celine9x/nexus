@@ -5,8 +5,10 @@ import { Button as AriaButton, Dialog as AriaDialog, DialogTrigger as AriaDialog
 import { Button } from "@/components/base/buttons/button";
 import { UntitledLogo } from "@/components/foundations/logo/untitledui-logo";
 import { UntitledLogoMinimal } from "@/components/foundations/logo/untitledui-logo-minimal";
-import { DropdownMenuSimple } from "@/components/marketing/header-navigation/dropdown-header-navigation";
 import { cx } from "@/utils/cx";
+import { DropdownMenuFeatureCard } from "./dropdown-menu-feature-card";
+import { DropdownMenuSimpleWithFooter } from "./dropdown-menu-simple-with-footer";
+import { DropdownMenuWithTwoColsAndLinksAndFooter } from "./dropdown-menu-with-two-cols-and-links-and-footer";
 
 type HeaderNavItem = {
     label: string;
@@ -15,10 +17,10 @@ type HeaderNavItem = {
 };
 
 const headerNavItems: HeaderNavItem[] = [
-    { label: "Products", href: "/products", menu: <DropdownMenuSimple /> },
-    { label: "Services", href: "/Services", menu: <DropdownMenuSimple /> },
+    { label: "Products", href: "/products", menu: <DropdownMenuSimpleWithFooter /> },
+    { label: "Services", href: "/Services", menu: <DropdownMenuFeatureCard /> },
     { label: "Pricing", href: "/pricing" },
-    { label: "Resources", href: "/resources", menu: <DropdownMenuSimple /> },
+    { label: "Resources", href: "/resources", menu: <DropdownMenuWithTwoColsAndLinksAndFooter /> },
     { label: "About", href: "/about" },
 ];
 

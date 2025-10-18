@@ -32,8 +32,8 @@ interface NavItemBaseProps {
     children?: ReactNode;
 }
 
-export const NavItemBase = ({ current, type, badge, href, icon: Icon, children, truncate = true, onClick }: NavItemBaseProps) => {
-    const iconElement = Icon && <Icon aria-hidden="true" className="mr-2 size-5 shrink-0 text-fg-quaternary transition-inherit-all" />;
+export const NavItemBase = ({ current, type, badge, href, icon: Icon, children, truncate = true, onClick, iconOnly }: NavItemBaseProps) => {
+    const iconElement = Icon && <Icon aria-hidden="true" className={cx("size-4 shrink-0 text-fg-quaternary transition-inherit-all", !iconOnly && "mr-2")} />;
 
     const badgeElement =
         badge && (typeof badge === "string" || typeof badge === "number") ? (
@@ -47,9 +47,10 @@ export const NavItemBase = ({ current, type, badge, href, icon: Icon, children, 
     const labelElement = (
         <span
             className={cx(
-                "flex-1 text-md font-semibold text-secondary transition-inherit-all group-hover:text-secondary_hover",
+                "flex-1 text-sm font-regular text-secondary transition-inherit-all group-hover:text-secondary_hover",
                 truncate && "truncate",
                 current && "text-secondary_hover",
+                iconOnly && "opacity-0 w-0 overflow-hidden",
             )}
         >
             {children}
@@ -61,14 +62,14 @@ export const NavItemBase = ({ current, type, badge, href, icon: Icon, children, 
 
     if (type === "collapsible") {
         return (
-            <summary className={cx("px-3 py-2", styles.root, current && styles.rootSelected)} onClick={onClick}>
+            <summary className={cx("px-3 py-2 min-h-10", styles.root, current && styles.rootSelected, iconOnly && "justify-center")} onClick={onClick}>
                 {iconElement}
 
                 {labelElement}
 
                 {badgeElement}
 
-                <ChevronDown aria-hidden="true" className="ml-3 size-4 shrink-0 stroke-[2.5px] text-fg-quaternary in-open:-scale-y-100" />
+                {!iconOnly && <ChevronDown aria-hidden="true" className="ml-3 size-4 shrink-0 stroke-[2.5px] text-fg-quaternary in-open:-scale-y-100" />}
             </summary>
         );
     }
@@ -79,7 +80,7 @@ export const NavItemBase = ({ current, type, badge, href, icon: Icon, children, 
                 href={href!}
                 target={isExternal ? "_blank" : "_self"}
                 rel="noopener noreferrer"
-                className={cx("py-2 pr-3 pl-10", styles.root, current && styles.rootSelected)}
+                className={cx("py-2 pr-3 pl-10 min-h-10", styles.root, current && styles.rootSelected)}
                 onClick={onClick}
                 aria-current={current ? "page" : undefined}
             >
@@ -95,14 +96,14 @@ export const NavItemBase = ({ current, type, badge, href, icon: Icon, children, 
             href={href!}
             target={isExternal ? "_blank" : "_self"}
             rel="noopener noreferrer"
-            className={cx("px-3 py-2", styles.root, current && styles.rootSelected)}
+            className={cx("px-3 py-2 min-h-10", styles.root, current && styles.rootSelected, iconOnly && "justify-center")}
             onClick={onClick}
             aria-current={current ? "page" : undefined}
         >
             {iconElement}
             {labelElement}
-            {externalIcon}
-            {badgeElement}
+            {!iconOnly && externalIcon}
+            {!iconOnly && badgeElement}
         </AriaLink>
     );
 };

@@ -25,25 +25,41 @@ import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { Tooltip, TooltipTrigger } from "@/components/base/tooltip/tooltip";
 import { cx } from "@/utils/cx";
 
-export const TableRowActionsDropdown = () => (
+interface TableRowActionsDropdownProps {
+    trigger?: ReactNode;
+    children?: ReactNode;
+}
+
+const TableRowActionsDropdownRoot = ({ trigger, children }: TableRowActionsDropdownProps) => (
     <Dropdown.Root>
-        <Dropdown.DotsButton />
+        {trigger || <Dropdown.DotsButton />}
 
         <Dropdown.Popover className="w-min">
             <Dropdown.Menu>
-                <Dropdown.Item icon={Edit01}>
-                    <span className="pr-4">Edit</span>
-                </Dropdown.Item>
-                <Dropdown.Item icon={Copy01}>
-                    <span className="pr-4">Copy link</span>
-                </Dropdown.Item>
-                <Dropdown.Item icon={Trash01}>
-                    <span className="pr-4">Delete</span>
-                </Dropdown.Item>
+                {children || (
+                    <>
+                        <Dropdown.Item icon={Edit01}>
+                            <span className="pr-4">Edit</span>
+                        </Dropdown.Item>
+                        <Dropdown.Item icon={Copy01}>
+                            <span className="pr-4">Copy link</span>
+                        </Dropdown.Item>
+                        <Dropdown.Item icon={Trash01}>
+                            <span className="pr-4">Delete</span>
+                        </Dropdown.Item>
+                    </>
+                )}
             </Dropdown.Menu>
         </Dropdown.Popover>
     </Dropdown.Root>
 );
+
+const TableRowActionsDropdown = Object.assign(TableRowActionsDropdownRoot, {
+    Item: Dropdown.Item,
+    Separator: Dropdown.Separator,
+});
+
+export { TableRowActionsDropdown };
 
 const TableContext = createContext<{ size: "sm" | "md" }>({ size: "md" });
 
