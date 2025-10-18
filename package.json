@@ -1,8 +1,8 @@
 {
-    "name": "eureka",
-    "version": "0.0.0",
+    "name": "eureka-celine9x",
+    "version": "0.0.28",
     "type": "module",
-    "private": true,
+    "private": false,
     "scripts": {
         "dev": "vite",
         "build": "tsc -b && vite build",
