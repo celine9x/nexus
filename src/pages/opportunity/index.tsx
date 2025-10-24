@@ -12,8 +12,13 @@ import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { opportunitiesApi, alliancesApi, type Opportunity, type Alliance, type OpportunityStatus } from "@/services/api";
+import { mockOpportunities, mockAlliances } from "@/services/mockData";
 import { useAlert } from "@/contexts/AlertContext";
 import { StatusBadgeDropdown, type StatusOption } from "@/components/application/status-badge-dropdown/status-badge-dropdown";
+import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
+import { MultiSelectFilter, type FilterOption } from "@/components/application/filters/multi-select-filter";
+import { ActiveFiltersBar, type ActiveFilter } from "@/components/application/filters/active-filters-bar";
+import { FilterCategoryList, type FilterCategory } from "@/components/application/filters/filter-category-list";
 
 const opportunityStatusOptions: StatusOption<OpportunityStatus>[] = [
   { value: "active", label: "Active", color: "success" },
@@ -36,6 +41,12 @@ const OpportunityPage = () => {
   const [selectedAllianceId, setSelectedAllianceId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Filter state
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [activeFilterScreen, setActiveFilterScreen] = useState<string | null>(null);
+  const [filterStatus, setFilterStatus] = useState<string[]>([]);
+  const [filterAlliance, setFilterAlliance] = useState<string[]>([]);
+
   // Fetch data on mount
   useEffect(() => {
     const fetchData = async () => {
@@ -50,9 +61,12 @@ const OpportunityPage = () => {
         console.error("Failed to fetch data:", error);
         showAlert({
           title: "Error",
-          description: "Failed to load data from server",
-          color: "error",
+          description: "Failed to load data from server, using mock data",
+          color: "warning",
         });
+        // Fallback to mock data
+        setOpportunities(mockOpportunities);
+        setAlliances(mockAlliances);
       } finally {
         setLoading(false);
       }
@@ -60,6 +74,69 @@ const OpportunityPage = () => {
 
     fetchData();
   }, []);
+
+  // Filter categories for main screen
+  const filterCategories: FilterCategory[] = useMemo(() => {
+    const categories: FilterCategory[] = [];
+
+    if (filterStatus.length > 0) {
+      categories.push({ key: 'status', label: 'Status', badge: filterStatus.length.toString() });
+    } else {
+      categories.push({ key: 'status', label: 'Status' });
+    }
+
+    if (filterAlliance.length > 0) {
+      categories.push({ key: 'alliance', label: 'Alliance', badge: filterAlliance.length.toString() });
+    } else {
+      categories.push({ key: 'alliance', label: 'Alliance' });
+    }
+
+    return categories;
+  }, [filterStatus, filterAlliance]);
+
+  // Filter options
+  const statusFilterOptions: FilterOption[] = useMemo(() =>
+    opportunityStatusOptions.map(opt => ({
+      value: opt.value,
+      label: opt.label,
+      count: opportunities.filter(o => o.status === opt.value).length
+    })), [opportunities]
+  );
+
+  const allianceFilterOptions: FilterOption[] = useMemo(() =>
+    alliances.map(all => ({
+      value: all.id.toString(),
+      label: all.title,
+      count: opportunities.filter(o => o.alliance_id === all.id).length
+    })), [alliances, opportunities]
+  );
+
+  // Active filters for display
+  const activeFilters: ActiveFilter[] = useMemo(() => {
+    const filters: ActiveFilter[] = [];
+
+    if (filterStatus.length > 0) {
+      filters.push({
+        key: 'status',
+        label: 'Status',
+        value: filterStatus.map(s => opportunityStatusOptions.find(opt => opt.value === s)?.label || s),
+        options: statusFilterOptions,
+        selectedValues: filterStatus,
+      });
+    }
+
+    if (filterAlliance.length > 0) {
+      filters.push({
+        key: 'alliance',
+        label: 'Alliance',
+        value: filterAlliance.map(a => alliances.find(all => all.id.toString() === a)?.title || a),
+        options: allianceFilterOptions,
+        selectedValues: filterAlliance,
+      });
+    }
+
+    return filters;
+  }, [filterStatus, filterAlliance, alliances, statusFilterOptions, allianceFilterOptions]);
 
   // Filter and sort items
   const filteredAndSortedItems = useMemo(() => {
@@ -73,6 +150,15 @@ const OpportunityPage = () => {
         item.alliance?.title.toLowerCase().includes(query) ||
         item.id.toString().includes(query)
       );
+    }
+
+    // Apply filters
+    if (filterStatus.length > 0) {
+      items = items.filter(item => filterStatus.includes(item.status));
+    }
+
+    if (filterAlliance.length > 0) {
+      items = items.filter(item => item.alliance_id && filterAlliance.includes(item.alliance_id.toString()));
     }
 
     // Apply sorting
@@ -106,7 +192,7 @@ const OpportunityPage = () => {
     }
 
     return items;
-  }, [opportunities, sortDescriptor, searchQuery]);
+  }, [opportunities, filterStatus, filterAlliance, sortDescriptor, searchQuery]);
 
   const handleEdit = (id: number) => {
     console.log("Edit opportunity:", id);
@@ -201,6 +287,47 @@ const OpportunityPage = () => {
     }
   };
 
+  // Filter handlers
+  const handleRemoveFilter = (key: string) => {
+    switch (key) {
+      case 'status':
+        setFilterStatus([]);
+        break;
+      case 'alliance':
+        setFilterAlliance([]);
+        break;
+    }
+  };
+
+  const handleEditFilter = (key: string, values: string[]) => {
+    switch (key) {
+      case 'status':
+        setFilterStatus(values);
+        break;
+      case 'alliance':
+        setFilterAlliance(values);
+        break;
+    }
+  };
+
+  const handleClearAllFilters = () => {
+    setFilterStatus([]);
+    setFilterAlliance([]);
+  };
+
+  const handleApplyFilters = () => {
+    setIsFilterOpen(false);
+    setActiveFilterScreen(null);
+  };
+
+  const handleSelectFilterCategory = (key: string) => {
+    setActiveFilterScreen(key);
+  };
+
+  const handleBackToMain = () => {
+    setActiveFilterScreen(null);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen w-screen flex bg-secondary items-center justify-center">
@@ -284,10 +411,19 @@ const OpportunityPage = () => {
             primaryButtonLabel="Create"
             badgeCount={opportunities.length}
             onAction1={handleCreate}
-            onAction2={() => console.log("Action 2")}
+            onAction2={() => setIsFilterOpen(true)}
             searchValue={searchQuery}
             onSearchChange={setSearchQuery}
           />
+
+          {/* Active Filters Bar */}
+          <ActiveFiltersBar
+            filters={activeFilters}
+            onRemoveFilter={handleRemoveFilter}
+            onEditFilter={handleEditFilter}
+            onClearAll={handleClearAllFilters}
+          />
+
           <TableCard.Root>
             <Table
               aria-label="Opportunities"
@@ -384,6 +520,61 @@ const OpportunityPage = () => {
             />
           </TableCard.Root>
         </div>
+
+        {/* Filter Slideout Panel */}
+        <SlideoutMenu.Trigger isOpen={isFilterOpen} onOpenChange={setIsFilterOpen}>
+          <SlideoutMenu>
+            {({ close }) => (
+              <>
+                <SlideoutMenu.Header onClose={close}>
+                  <Heading slot="title" className="text-xl font-semibold text-primary">
+                    Filters
+                  </Heading>
+                </SlideoutMenu.Header>
+
+                <SlideoutMenu.Content>
+                  {!activeFilterScreen && (
+                    <FilterCategoryList
+                      categories={filterCategories}
+                      onSelectCategory={handleSelectFilterCategory}
+                    />
+                  )}
+
+                  {activeFilterScreen === 'status' && (
+                    <MultiSelectFilter
+                      title="Status"
+                      options={statusFilterOptions}
+                      selectedValues={filterStatus}
+                      onChange={setFilterStatus}
+                      onBack={handleBackToMain}
+                    />
+                  )}
+
+                  {activeFilterScreen === 'alliance' && (
+                    <MultiSelectFilter
+                      title="Alliance"
+                      options={allianceFilterOptions}
+                      selectedValues={filterAlliance}
+                      onChange={setFilterAlliance}
+                      onBack={handleBackToMain}
+                    />
+                  )}
+                </SlideoutMenu.Content>
+
+                <SlideoutMenu.Footer>
+                  <div className="flex justify-between gap-3">
+                    <Button color="secondary" size="md" onClick={handleClearAllFilters}>
+                      Clear
+                    </Button>
+                    <Button size="md" onClick={handleApplyFilters}>
+                      Apply filters
+                    </Button>
+                  </div>
+                </SlideoutMenu.Footer>
+              </>
+            )}
+          </SlideoutMenu>
+        </SlideoutMenu.Trigger>
       </div>
     </>
   );

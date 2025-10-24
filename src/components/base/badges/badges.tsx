@@ -151,26 +151,37 @@ export const Badge = <T extends BadgeTypes>(props: BadgeProps<T>) => {
     };
 
     const isAiBadge = (color as string) === "ai" && type === "modern";
-    const aiGradientStyle = isAiBadge ? {
-        borderImage: 'linear-gradient(to right, #4649FF, #0EDDA5) 1',
-        borderRadius: '2px',
-        borderWidth: '1.5px',
-        borderStyle: 'solid',
-    } : undefined;
+
+    if (isAiBadge) {
+        return (
+            <span
+                className={cx("inline-flex items-center relative", props.className)}
+                style={{
+                    background: 'linear-gradient(to right, #4649FF, #0EDDA5)',
+                    borderRadius: '2px',
+                    padding: '1.5px',
+                }}
+            >
+                <span
+                    className={cx(sizes[type][size], "bg-white flex items-center")}
+                    style={{ borderRadius: '1px' }}
+                >
+                    <span
+                        className="bg-gradient-to-r from-[#4649FF] to-[#0EDDA5] bg-clip-text text-transparent font-bold uppercase"
+                        style={{ WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
+                    >
+                        {children}
+                    </span>
+                </span>
+            </span>
+        );
+    }
 
     return (
         <span
             className={cx(colors.common, sizes[type][size], colors.styles[color].root, props.className)}
-            style={aiGradientStyle}
         >
-            {isAiBadge ? (
-                <span
-                    className="bg-gradient-to-r from-[#4649FF] to-[#0EDDA5] bg-clip-text text-transparent font-bold uppercase"
-                    style={{ WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
-                >
-                    {children}
-                </span>
-            ) : children}
+            {children}
         </span>
     );
 };
