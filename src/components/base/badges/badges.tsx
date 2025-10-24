@@ -66,6 +66,11 @@ export const filledColors: Record<BadgeColors, { root: string; addon: string; ad
         addon: "text-utility-orange-500",
         addonButton: "hover:bg-utility-orange-100 text-utility-orange-400 hover:text-utility-orange-500",
     },
+    ai: {
+        root: "bg-white text-secondary ring-transparent",
+        addon: "text-gray-500",
+        addonButton: "hover:bg-utility-gray-100 text-utility-gray-400 hover:text-utility-gray-500",
+    },
 };
 
 const addonOnlyColors = Object.fromEntries(Object.entries(filledColors).map(([key, value]) => [key, { root: "", addon: value.addon }])) as Record<
@@ -87,6 +92,11 @@ const withPillTypes = {
         styles: {
             gray: {
                 root: "bg-primary text-secondary ring-primary",
+                addon: "text-gray-500",
+                addonButton: "hover:bg-utility-gray-100 text-utility-gray-400 hover:text-utility-gray-500",
+            },
+            ai: {
+                root: "bg-white text-secondary ring-transparent",
                 addon: "text-gray-500",
                 addonButton: "hover:bg-utility-gray-100 text-utility-gray-400 hover:text-utility-gray-500",
             },
@@ -140,7 +150,29 @@ export const Badge = <T extends BadgeTypes>(props: BadgeProps<T>) => {
         [badgeTypes.badgeModern]: badgeSizes,
     };
 
-    return <span className={cx(colors.common, sizes[type][size], colors.styles[color].root, props.className)}>{children}</span>;
+    const isAiBadge = (color as string) === "ai" && type === "modern";
+    const aiGradientStyle = isAiBadge ? {
+        borderImage: 'linear-gradient(to right, #4649FF, #0EDDA5) 1',
+        borderRadius: '2px',
+        borderWidth: '1.5px',
+        borderStyle: 'solid',
+    } : undefined;
+
+    return (
+        <span
+            className={cx(colors.common, sizes[type][size], colors.styles[color].root, props.className)}
+            style={aiGradientStyle}
+        >
+            {isAiBadge ? (
+                <span
+                    className="bg-gradient-to-r from-[#4649FF] to-[#0EDDA5] bg-clip-text text-transparent font-bold uppercase"
+                    style={{ WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
+                >
+                    {children}
+                </span>
+            ) : children}
+        </span>
+    );
 };
 
 interface BadgeWithDotProps<T extends BadgeTypes> {
