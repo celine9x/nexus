@@ -27,6 +27,8 @@ interface HubHeaderProps {
   onAction3?: () => void;
   onBack?: () => void;
   primaryButtonLabel?: string;
+  searchValue?: string;
+  onSearchChange?: (value: string) => void;
 }
 
 export const HubHeader: React.FC<HubHeaderProps> = ({
@@ -37,7 +39,9 @@ export const HubHeader: React.FC<HubHeaderProps> = ({
   onAction2,
   onBack,
   onAction3,
-  primaryButtonLabel = "Create"
+  primaryButtonLabel = "Create",
+  searchValue = "",
+  onSearchChange
 }) => {
   const [selectedOption, setSelectedOption] = useState("Option 1");
   const [selectedView, setSelectedView] = useState("View 1");
@@ -164,6 +168,8 @@ export const HubHeader: React.FC<HubHeaderProps> = ({
                 icon={SearchMd}
                 placeholder="Search"
                 size="sm"
+                value={searchValue}
+                onChange={onSearchChange}
               />
 
               <Button

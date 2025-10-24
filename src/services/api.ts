@@ -4,6 +4,8 @@ const API_BASE_URL = 'http://localhost:3001/api';
 export type AgreementStatus = 'draft' | 'expired' | 'terminated' | 'canceled' | 'no';
 export type AllianceStatus = 'active' | 'closed' | 'launching' | 'terminating';
 export type OpportunityStatus = 'active' | 'decline' | 'on-hold';
+export type ObligationStatus = 'complete' | 'pending' | 'terminated';
+export type ObligationType = 'deliverable' | 'payment' | 'milestone' | 'compliance' | 'other';
 
 export interface Agreement {
   id: number;
@@ -27,6 +29,16 @@ export interface Opportunity {
   status: OpportunityStatus;
   agreement?: Agreement | null;
   alliance?: Alliance | null;
+}
+
+export interface Obligation {
+  id: number;
+  title: string;
+  status: ObligationStatus;
+  forecasted_date: string;
+  agreement_id: number;
+  type: ObligationType;
+  agreement?: Agreement | null;
 }
 
 export interface AllianceWithRelations extends Alliance {
@@ -145,5 +157,41 @@ export const agreementsApi = {
       method: 'DELETE',
     });
     if (!response.ok) throw new Error('Failed to delete agreement');
+  },
+};
+
+// Obligations API
+export const obligationsApi = {
+  getAll: async (): Promise<Obligation[]> => {
+    const response = await fetch(`${API_BASE_URL}/obligations`);
+    if (!response.ok) throw new Error('Failed to fetch obligations');
+    return response.json();
+  },
+
+  create: async (data: Omit<Obligation, 'id' | 'agreement'>): Promise<Obligation> => {
+    const response = await fetch(`${API_BASE_URL}/obligations`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error('Failed to create obligation');
+    return response.json();
+  },
+
+  update: async (id: number, data: Partial<Obligation>): Promise<Obligation> => {
+    const response = await fetch(`${API_BASE_URL}/obligations/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error('Failed to update obligation');
+    return response.json();
+  },
+
+  delete: async (id: number): Promise<void> => {
+    const response = await fetch(`${API_BASE_URL}/obligations/${id}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) throw new Error('Failed to delete obligation');
   },
 };

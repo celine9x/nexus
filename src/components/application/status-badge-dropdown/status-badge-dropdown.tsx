@@ -54,20 +54,20 @@ export function StatusBadgeDropdown<T extends string>({
           {options.map((option) => (
             <Dropdown.Item
               key={option.value}
-              label={
-                <div className="flex items-center gap-2">
-                  <BadgeWithDot
-                    type="pill-color"
-                    size="sm"
-                    color={option.color}
-                    className="capitalize"
-                  >
-                    {option.label}
-                  </BadgeWithDot>
-                </div>
-              }
+              unstyled
               onAction={() => onChange(option.value)}
-            />
+            >
+              <div className="flex items-center gap-2 px-2.5 py-2 hover:bg-primary_hover rounded-md cursor-pointer">
+                <BadgeWithDot
+                  type="pill-color"
+                  size="sm"
+                  color={option.color}
+                  className="capitalize"
+                >
+                  {option.label}
+                </BadgeWithDot>
+              </div>
+            </Dropdown.Item>
           ))}
         </Dropdown.Menu>
       </Dropdown.Popover>

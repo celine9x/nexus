@@ -11,6 +11,7 @@ import { Badge } from "@/components/base/badges/badges";
 import { Dialog, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
+import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { alliancesApi, type AllianceWithRelations, type AllianceStatus } from "@/services/api";
 import { useAlert } from "@/contexts/AlertContext";
 import { StatusBadgeDropdown, type StatusOption } from "@/components/application/status-badge-dropdown/status-badge-dropdown";
@@ -32,6 +33,7 @@ const AlliancePage = () => {
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formTitle, setFormTitle] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Fetch data on mount
   useEffect(() => {
@@ -55,40 +57,51 @@ const AlliancePage = () => {
     fetchData();
   }, []);
 
-  // Sort items based on sort descriptor
-  const sortedItems = useMemo(() => {
-    const items = [...alliancesWithRelations];
+  // Filter and sort items
+  const filteredAndSortedItems = useMemo(() => {
+    let items = [...alliancesWithRelations];
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      items = items.filter(item =>
+        item.title.toLowerCase().includes(query) ||
+        item.id.toString().includes(query)
+      );
+    }
+
+    // Apply sorting
     const { column, direction } = sortDescriptor;
 
-    if (!column) return items;
+    if (column) {
+      items.sort((a, b) => {
+        let aValue: string | number = "";
+        let bValue: string | number = "";
 
-    items.sort((a, b) => {
-      let aValue: string | number = "";
-      let bValue: string | number = "";
+        switch (column) {
+          case "title":
+            aValue = a.title;
+            bValue = b.title;
+            break;
+          case "opportunities":
+            aValue = a.opportunities.length;
+            bValue = b.opportunities.length;
+            break;
+          case "agreements":
+            aValue = a.agreements.length;
+            bValue = b.agreements.length;
+            break;
+          default:
+            return 0;
+        }
 
-      switch (column) {
-        case "title":
-          aValue = a.title;
-          bValue = b.title;
-          break;
-        case "opportunities":
-          aValue = a.opportunities.length;
-          bValue = b.opportunities.length;
-          break;
-        case "agreements":
-          aValue = a.agreements.length;
-          bValue = b.agreements.length;
-          break;
-        default:
-          return 0;
-      }
-
-      const comparison = aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
-      return direction === "ascending" ? comparison : -comparison;
-    });
+        const comparison = aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+        return direction === "ascending" ? comparison : -comparison;
+      });
+    }
 
     return items;
-  }, [alliancesWithRelations, sortDescriptor]);
+  }, [alliancesWithRelations, sortDescriptor, searchQuery]);
 
   const handleEdit = (id: number) => {
     console.log("Edit alliance:", id);
@@ -160,6 +173,7 @@ const AlliancePage = () => {
     try {
       await alliancesApi.create({
         title: formTitle,
+        status: "active",
       });
 
       // Refresh the data
@@ -240,6 +254,8 @@ const AlliancePage = () => {
           badgeCount={alliancesWithRelations.length}
           onAction1={handleCreate}
           onAction2={() => console.log("Action 2")}
+          searchValue={searchQuery}
+          onSearchChange={setSearchQuery}
         />
         <TableCard.Root>
           <Table
@@ -256,7 +272,7 @@ const AlliancePage = () => {
               <Table.Head id="actions" label="Actions" />
             </Table.Header>
 
-            <Table.Body items={sortedItems}>
+            <Table.Body items={filteredAndSortedItems}>
               {(item) => (
                 <Table.Row id={item.id.toString()}>
                   <Table.Cell>
@@ -339,26 +355,24 @@ const AlliancePage = () => {
                   </Table.Cell>
                   <Table.Cell className="px-4">
                     <div className="flex justify-end gap-1">
-                      <ButtonUtility
-                        size="xs"
-                        color="secondary"
-                        tooltip="Edit"
-                        icon={Edit01}
-                        onClick={() => handleEdit(item.id)}
-                      />
-                      <ButtonUtility
-                        size="xs"
-                        color="secondary"
-                        tooltip="Delete"
-                        icon={Trash01}
-                        onClick={() => handleDelete(item.id)}
-                      />
-                      <ButtonUtility
-                        size="xs"
-                        color="secondary"
-                        tooltip="More"
-                        icon={DotsVertical}
-                      />
+                      <Dropdown.Root>
+                        <ButtonUtility
+                          size="xs"
+                          color="secondary"
+                          tooltip="More"
+                          icon={DotsVertical}
+                        />
+                        <Dropdown.Popover>
+                          <Dropdown.Menu>
+                            <Dropdown.Item icon={Edit01} onAction={() => handleEdit(item.id)}>
+                              Edit
+                            </Dropdown.Item>
+                            <Dropdown.Item icon={Trash01} onAction={() => handleDelete(item.id)}>
+                              Delete
+                            </Dropdown.Item>
+                          </Dropdown.Menu>
+                        </Dropdown.Popover>
+                      </Dropdown.Root>
                     </div>
                   </Table.Cell>
                 </Table.Row>

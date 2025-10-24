@@ -34,6 +34,7 @@ const OpportunityPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formTitle, setFormTitle] = useState("");
   const [selectedAllianceId, setSelectedAllianceId] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Fetch data on mount
   useEffect(() => {
@@ -60,40 +61,52 @@ const OpportunityPage = () => {
     fetchData();
   }, []);
 
-  // Sort items based on sort descriptor
-  const sortedItems = useMemo(() => {
-    const items = [...opportunities];
+  // Filter and sort items
+  const filteredAndSortedItems = useMemo(() => {
+    let items = [...opportunities];
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      items = items.filter(item =>
+        item.title.toLowerCase().includes(query) ||
+        item.alliance?.title.toLowerCase().includes(query) ||
+        item.id.toString().includes(query)
+      );
+    }
+
+    // Apply sorting
     const { column, direction } = sortDescriptor;
 
-    if (!column) return items;
+    if (column) {
+      items.sort((a, b) => {
+        let aValue: string | number = "";
+        let bValue: string | number = "";
 
-    items.sort((a, b) => {
-      let aValue: string | number = "";
-      let bValue: string | number = "";
+        switch (column) {
+          case "title":
+            aValue = a.title;
+            bValue = b.title;
+            break;
+          case "agreement":
+            aValue = a.agreement?.title || "";
+            bValue = b.agreement?.title || "";
+            break;
+          case "alliance":
+            aValue = a.alliance?.title || "";
+            bValue = b.alliance?.title || "";
+            break;
+          default:
+            return 0;
+        }
 
-      switch (column) {
-        case "title":
-          aValue = a.title;
-          bValue = b.title;
-          break;
-        case "agreement":
-          aValue = a.agreement?.title || "";
-          bValue = b.agreement?.title || "";
-          break;
-        case "alliance":
-          aValue = a.alliance?.title || "";
-          bValue = b.alliance?.title || "";
-          break;
-        default:
-          return 0;
-      }
-
-      const comparison = aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
-      return direction === "ascending" ? comparison : -comparison;
-    });
+        const comparison = aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+        return direction === "ascending" ? comparison : -comparison;
+      });
+    }
 
     return items;
-  }, [opportunities, sortDescriptor]);
+  }, [opportunities, sortDescriptor, searchQuery]);
 
   const handleEdit = (id: number) => {
     console.log("Edit opportunity:", id);
@@ -166,6 +179,7 @@ const OpportunityPage = () => {
         title: formTitle,
         agreement_id: null,
         alliance_id: selectedAllianceId || null,
+        status: "active",
       });
 
       setOpportunities([...opportunities, newOpportunity]);
@@ -271,6 +285,8 @@ const OpportunityPage = () => {
             badgeCount={opportunities.length}
             onAction1={handleCreate}
             onAction2={() => console.log("Action 2")}
+            searchValue={searchQuery}
+            onSearchChange={setSearchQuery}
           />
           <TableCard.Root>
             <Table
@@ -287,7 +303,7 @@ const OpportunityPage = () => {
                 <Table.Head id="actions" label="Actions" />
               </Table.Header>
 
-              <Table.Body items={sortedItems}>
+              <Table.Body items={filteredAndSortedItems}>
                 {(item) => (
                   <Table.Row id={item.id.toString()}>
                     <Table.Cell>
@@ -337,26 +353,24 @@ const OpportunityPage = () => {
                     </Table.Cell>
                     <Table.Cell className="px-4">
                       <div className="flex justify-end gap-1">
-                        <ButtonUtility
-                          size="xs"
-                          color="secondary"
-                          tooltip="Edit"
-                          icon={Edit01}
-                          onClick={() => handleEdit(item.id)}
-                        />
-                        <ButtonUtility
-                          size="xs"
-                          color="secondary"
-                          tooltip="Delete"
-                          icon={Trash01}
-                          onClick={() => handleDelete(item.id)}
-                        />
-                        <ButtonUtility
-                          size="xs"
-                          color="secondary"
-                          tooltip="More"
-                          icon={DotsVertical}
-                        />
+                        <Dropdown.Root>
+                          <ButtonUtility
+                            size="xs"
+                            color="secondary"
+                            tooltip="More"
+                            icon={DotsVertical}
+                          />
+                          <Dropdown.Popover>
+                            <Dropdown.Menu>
+                              <Dropdown.Item icon={Edit01} onAction={() => handleEdit(item.id)}>
+                                Edit
+                              </Dropdown.Item>
+                              <Dropdown.Item icon={Trash01} onAction={() => handleDelete(item.id)}>
+                                Delete
+                              </Dropdown.Item>
+                            </Dropdown.Menu>
+                          </Dropdown.Popover>
+                        </Dropdown.Root>
                       </div>
                     </Table.Cell>
                   </Table.Row>

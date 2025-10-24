@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
-import db, { initDB, enrichOpportunity, getAlliancesWithRelations, type Agreement, type Alliance, type Opportunity, type AllianceWithRelations } from './db.js';
+import db, { initDB, enrichOpportunity, enrichObligation, getAlliancesWithRelations, type Agreement, type Alliance, type Opportunity, type Obligation, type AllianceWithRelations } from './db.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -214,6 +214,78 @@ app.delete('/api/alliances/:id', async (req: Request, res: Response) => {
   res.status(204).send();
 });
 
+// OBLIGATIONS ROUTES
+
+// GET /obligations - Get all obligations
+app.get('/api/obligations', (req: Request, res: Response) => {
+  res.json(db.data!.obligations);
+});
+
+// POST /obligations - Create a new obligation
+app.post('/api/obligations', async (req: Request, res: Response) => {
+  const { title, status, forecasted_date, agreement_id, type } = req.body;
+
+  if (!title || !status || !forecasted_date || agreement_id === undefined || !type) {
+    return res.status(400).json({
+      error: 'Title, status, forecasted_date, agreement_id, and type are required'
+    });
+  }
+
+  const newId = Math.max(...db.data!.obligations.map((o) => o.id), 0) + 1;
+  const newObligation = enrichObligation({
+    title,
+    status,
+    forecasted_date,
+    agreement_id,
+    type,
+  }, newId);
+
+  db.data!.obligations.push(newObligation);
+  await db.write();
+  res.status(201).json(newObligation);
+});
+
+// PUT /obligations/:id - Update an obligation
+app.put('/api/obligations/:id', async (req: Request, res: Response) => {
+  const id = parseInt(req.params.id);
+  const obligationIndex = db.data!.obligations.findIndex((obl) => obl.id === id);
+
+  if (obligationIndex === -1) {
+    return res.status(404).json({ error: 'Obligation not found' });
+  }
+
+  const updatedData = req.body;
+
+  // If agreement_id changed, we need to refresh the nested agreement object
+  if (updatedData.agreement_id !== undefined) {
+    const agreement = db.data!.agreements.find((a) => a.id === updatedData.agreement_id);
+    updatedData.agreement = agreement || null;
+  }
+
+  db.data!.obligations[obligationIndex] = {
+    ...db.data!.obligations[obligationIndex],
+    ...updatedData,
+  };
+
+  await db.write();
+  res.json(db.data!.obligations[obligationIndex]);
+});
+
+// DELETE /obligations/:id - Delete an obligation
+app.delete('/api/obligations/:id', async (req: Request, res: Response) => {
+  const id = parseInt(req.params.id);
+  const initialLength = db.data!.obligations.length;
+
+  db.data!.obligations = db.data!.obligations.filter((obl) => obl.id !== id);
+
+  if (db.data!.obligations.length === initialLength) {
+    return res.status(404).json({ error: 'Obligation not found' });
+  }
+
+  await db.write();
+  res.status(204).send();
+});
+
 // Health check endpoint
 app.get('/api/health', (req: Request, res: Response) => {
   res.json({
@@ -223,6 +295,7 @@ app.get('/api/health', (req: Request, res: Response) => {
       opportunities: db.data!.opportunities.length,
       alliances: db.data!.alliances.length,
       agreements: db.data!.agreements.length,
+      obligations: db.data!.obligations.length,
     }
   });
 });
@@ -247,6 +320,10 @@ initDB().then(() => {
     console.log(`  POST   /api/agreements`);
     console.log(`  PUT    /api/agreements/:id`);
     console.log(`  DELETE /api/agreements/:id`);
+    console.log(`  GET    /api/obligations`);
+    console.log(`  POST   /api/obligations`);
+    console.log(`  PUT    /api/obligations/:id`);
+    console.log(`  DELETE /api/obligations/:id`);
   });
 });
 

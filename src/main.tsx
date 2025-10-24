@@ -7,6 +7,7 @@ import { Settings01 } from "./pages/settings-01";
 import OpportunityPage from "./pages/opportunity/index";
 import AgreementPage from "./pages/agreement/index";
 import AlliancePage from "./pages/alliance/index";
+import ObligationPage from "./pages/obligation";
 
 import { RouteProvider } from "@/providers/router-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
@@ -27,6 +28,8 @@ createRoot(document.getElementById("root")!).render(
                                 <Route path="/opportunity" element={<OpportunityPage />} />
                                 <Route path="/agreement" element={<AgreementPage />} />
                                 <Route path="/alliance" element={<AlliancePage />} />
+                                <Route path="/obligation" element=
+                                {<ObligationPage/>}/>
                             </Routes>
                         </RouteProvider>
                     </BrowserRouter>

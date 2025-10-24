@@ -1,5 +1,5 @@
 import { SidebarNavigationSectionsSubheadings } from "./sidebar-sections-subheadings";
-import { BarChartSquare02, Home02, CheckDone01, File05, PieChart03, Rows01, Users01 } from "@untitledui/icons";
+import { Home02, CheckDone01, File05, PieChart03, Rows01, Users01 } from "@untitledui/icons";
 import { Badge } from "@/components/base/badges/badges";
 import type { NavItemType } from "@/components/application/app-navigation/config";
 import { useLocation } from "react-router";
@@ -58,7 +58,7 @@ const navItemsWithSectionsSubheadings: Array<{ label: string; items: NavItemType
       },
           {
         label: "Obligations",
-        href: "#",
+        href: "/obligation",
         icon: Users01,
       },
     ],

@@ -12,26 +12,31 @@ import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-m
 import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
-import { agreementsApi, opportunitiesApi, alliancesApi, type Agreement, type Opportunity, type Alliance, type AgreementStatus } from "@/services/api";
+import { obligationsApi, agreementsApi, type Obligation, type Agreement, type ObligationStatus, type ObligationType } from "@/services/api";
 import { useAlert } from "@/contexts/AlertContext";
 import { StatusBadgeDropdown, type StatusOption } from "@/components/application/status-badge-dropdown/status-badge-dropdown";
 import { MultiSelectFilter, type FilterOption } from "@/components/application/filters/multi-select-filter";
 import { ActiveFiltersBar, type ActiveFilter } from "@/components/application/filters/active-filters-bar";
 import { FilterCategoryList, type FilterCategory } from "@/components/application/filters/filter-category-list";
 
-const agreementStatusOptions: StatusOption<AgreementStatus>[] = [
-  { value: "draft", label: "Draft", color: "gray" },
-  { value: "expired", label: "Expired", color: "warning" },
+const obligationStatusOptions: StatusOption<ObligationStatus>[] = [
+  { value: "pending", label: "Pending", color: "warning" },
+  { value: "complete", label: "Complete", color: "success" },
   { value: "terminated", label: "Terminated", color: "error" },
-  { value: "canceled", label: "Canceled", color: "error" },
-  { value: "no", label: "No", color: "gray" },
 ];
 
-const AgreementPage = () => {
+const obligationTypeOptions: { value: ObligationType; label: string }[] = [
+  { value: "deliverable", label: "Deliverable" },
+  { value: "payment", label: "Payment" },
+  { value: "milestone", label: "Milestone" },
+  { value: "compliance", label: "Compliance" },
+  { value: "other", label: "Other" },
+];
+
+const ObligationPage = () => {
   const { showAlert } = useAlert();
+  const [obligations, setObligations] = useState<Obligation[]>([]);
   const [agreements, setAgreements] = useState<Agreement[]>([]);
-  const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
-  const [alliances, setAlliances] = useState<Alliance[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
     column: "title",
@@ -39,28 +44,29 @@ const AgreementPage = () => {
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formTitle, setFormTitle] = useState("");
-  const [selectedOpportunityId, setSelectedOpportunityId] = useState<number | null>(null);
+  const [formStatus, setFormStatus] = useState<ObligationStatus>("pending");
+  const [formForecastedDate, setFormForecastedDate] = useState("");
+  const [formType, setFormType] = useState<ObligationType>("deliverable");
+  const [selectedAgreementId, setSelectedAgreementId] = useState<number | null>(null);
 
   // Filter state
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [activeFilterScreen, setActiveFilterScreen] = useState<string | null>(null);
+  const [activeFilterScreen, setActiveFilterScreen] = useState<string | null>(null); // null = main screen, or filter key
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
-  const [filterOpportunity, setFilterOpportunity] = useState<string[]>([]);
-  const [filterAlliance, setFilterAlliance] = useState<string[]>([]);
+  const [filterType, setFilterType] = useState<string[]>([]);
+  const [filterAgreement, setFilterAgreement] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
 
   // Fetch data on mount
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [agreementsData, opportunitiesData, alliancesData] = await Promise.all([
+        const [obligationsData, agreementsData] = await Promise.all([
+          obligationsApi.getAll(),
           agreementsApi.getAll(),
-          opportunitiesApi.getAll(),
-          alliancesApi.getAll(),
         ]);
+        setObligations(obligationsData);
         setAgreements(agreementsData);
-        setOpportunities(opportunitiesData);
-        setAlliances(alliancesData);
       } catch (error) {
         console.error("Failed to fetch data:", error);
         showAlert({
@@ -76,67 +82,78 @@ const AgreementPage = () => {
     fetchData();
   }, []);
 
-  // Enrich agreements with related opportunity and alliance data
-  const enrichedAgreements = useMemo(() => {
-    return agreements.map((agreement) => {
-      const opportunity = opportunities.find(o => o.id === agreement.opportunity_id);
-      const alliance = alliances.find(a => a.id === agreement.alliance_id);
-      return {
-        ...agreement,
-        opportunity,
-        alliance,
-      };
-    });
-  }, [agreements, opportunities, alliances]);
-
   // Filter categories for main screen
   const filterCategories: FilterCategory[] = useMemo(() => {
     const categories: FilterCategory[] = [];
 
+    // Status category
     if (filterStatus.length > 0) {
-      categories.push({ key: 'status', label: 'Status', badge: filterStatus.length.toString() });
+      categories.push({
+        key: 'status',
+        label: 'Status',
+        badge: filterStatus.length.toString(),
+      });
     } else {
-      categories.push({ key: 'status', label: 'Status' });
+      categories.push({
+        key: 'status',
+        label: 'Status',
+      });
     }
 
-    if (filterOpportunity.length > 0) {
-      categories.push({ key: 'opportunity', label: 'Opportunity', badge: filterOpportunity.length.toString() });
+    // Type category
+    if (filterType.length > 0) {
+      categories.push({
+        key: 'type',
+        label: 'Type',
+        badge: filterType.length.toString(),
+      });
     } else {
-      categories.push({ key: 'opportunity', label: 'Opportunity' });
+      categories.push({
+        key: 'type',
+        label: 'Type',
+      });
     }
 
-    if (filterAlliance.length > 0) {
-      categories.push({ key: 'alliance', label: 'Alliance', badge: filterAlliance.length.toString() });
+    // Agreement category
+    if (filterAgreement.length > 0) {
+      categories.push({
+        key: 'agreement',
+        label: 'Agreement',
+        badge: filterAgreement.length.toString(),
+      });
     } else {
-      categories.push({ key: 'alliance', label: 'Alliance' });
+      categories.push({
+        key: 'agreement',
+        label: 'Agreement',
+      });
     }
 
     return categories;
-  }, [filterStatus, filterOpportunity, filterAlliance]);
+  }, [filterStatus, filterType, filterAgreement]);
 
   // Filter options
   const statusFilterOptions: FilterOption[] = useMemo(() =>
-    agreementStatusOptions.map(opt => ({
+    obligationStatusOptions.map(opt => ({
       value: opt.value,
       label: opt.label,
-      count: agreements.filter(a => a.status === opt.value).length
-    })), [agreements]
+      count: obligations.filter(o => o.status === opt.value).length
+    })), [obligations]
   );
 
-  const opportunityFilterOptions: FilterOption[] = useMemo(() =>
-    opportunities.map(opp => ({
-      value: opp.id.toString(),
-      label: opp.title,
-      count: agreements.filter(a => a.opportunity_id === opp.id).length
-    })), [opportunities, agreements]
+  const typeFilterOptions: FilterOption[] = useMemo(() =>
+    obligationTypeOptions.map(opt => ({
+      value: opt.value,
+      label: opt.label,
+      count: obligations.filter(o => o.type === opt.value).length
+    })), [obligations]
   );
 
-  const allianceFilterOptions: FilterOption[] = useMemo(() =>
-    alliances.map(all => ({
-      value: all.id.toString(),
-      label: all.title,
-      count: agreements.filter(a => a.alliance_id === all.id).length
-    })), [alliances, agreements]
+  const agreementFilterOptions: FilterOption[] = useMemo(() =>
+    agreements.map(agr => ({
+      value: agr.id.toString(),
+      label: agr.title,
+      count: obligations.filter(o => o.agreement_id === agr.id).length
+    })), [agreements, obligations]
   );
 
   // Active filters for display
@@ -147,46 +164,46 @@ const AgreementPage = () => {
       filters.push({
         key: 'status',
         label: 'Status',
-        value: filterStatus.map(s => agreementStatusOptions.find(opt => opt.value === s)?.label || s),
+        value: filterStatus.map(s => obligationStatusOptions.find(opt => opt.value === s)?.label || s),
         options: statusFilterOptions,
         selectedValues: filterStatus,
       });
     }
 
-    if (filterOpportunity.length > 0) {
+    if (filterType.length > 0) {
       filters.push({
-        key: 'opportunity',
-        label: 'Opportunity',
-        value: filterOpportunity.map(o => opportunities.find(opp => opp.id.toString() === o)?.title || o),
-        options: opportunityFilterOptions,
-        selectedValues: filterOpportunity,
+        key: 'type',
+        label: 'Type',
+        value: filterType.map(t => obligationTypeOptions.find(opt => opt.value === t)?.label || t),
+        options: typeFilterOptions,
+        selectedValues: filterType,
       });
     }
 
-    if (filterAlliance.length > 0) {
+    if (filterAgreement.length > 0) {
       filters.push({
-        key: 'alliance',
-        label: 'Alliance',
-        value: filterAlliance.map(a => alliances.find(all => all.id.toString() === a)?.title || a),
-        options: allianceFilterOptions,
-        selectedValues: filterAlliance,
+        key: 'agreement',
+        label: 'Agreement',
+        value: filterAgreement.map(a => agreements.find(agr => agr.id.toString() === a)?.title || a),
+        options: agreementFilterOptions,
+        selectedValues: filterAgreement,
       });
     }
 
     return filters;
-  }, [filterStatus, filterOpportunity, filterAlliance, opportunities, alliances, statusFilterOptions, opportunityFilterOptions, allianceFilterOptions]);
+  }, [filterStatus, filterType, filterAgreement, agreements, statusFilterOptions, typeFilterOptions, agreementFilterOptions]);
 
   // Filter and sort items
   const filteredAndSortedItems = useMemo(() => {
-    let items = [...enrichedAgreements];
+    let items = [...obligations];
 
     // Apply search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       items = items.filter(item =>
         item.title.toLowerCase().includes(query) ||
-        item.opportunity?.title.toLowerCase().includes(query) ||
-        item.alliance?.title.toLowerCase().includes(query) ||
+        item.agreement?.title.toLowerCase().includes(query) ||
+        item.type.toLowerCase().includes(query) ||
         item.id.toString().includes(query)
       );
     }
@@ -196,12 +213,12 @@ const AgreementPage = () => {
       items = items.filter(item => filterStatus.includes(item.status));
     }
 
-    if (filterOpportunity.length > 0) {
-      items = items.filter(item => filterOpportunity.includes(item.opportunity_id.toString()));
+    if (filterType.length > 0) {
+      items = items.filter(item => filterType.includes(item.type));
     }
 
-    if (filterAlliance.length > 0) {
-      items = items.filter(item => filterAlliance.includes(item.alliance_id.toString()));
+    if (filterAgreement.length > 0) {
+      items = items.filter(item => filterAgreement.includes(item.agreement_id.toString()));
     }
 
     // Apply sorting
@@ -217,13 +234,21 @@ const AgreementPage = () => {
             aValue = a.title;
             bValue = b.title;
             break;
-          case "opportunity":
-            aValue = a.opportunity?.title || "";
-            bValue = b.opportunity?.title || "";
+          case "status":
+            aValue = a.status;
+            bValue = b.status;
             break;
-          case "alliance":
-            aValue = a.alliance?.title || "";
-            bValue = b.alliance?.title || "";
+          case "forecasted_date":
+            aValue = a.forecasted_date;
+            bValue = b.forecasted_date;
+            break;
+          case "agreement":
+            aValue = a.agreement?.title || "";
+            bValue = b.agreement?.title || "";
+            break;
+          case "type":
+            aValue = a.type;
+            bValue = b.type;
             break;
           default:
             return 0;
@@ -235,37 +260,37 @@ const AgreementPage = () => {
     }
 
     return items;
-  }, [enrichedAgreements, filterStatus, filterOpportunity, filterAlliance, sortDescriptor, searchQuery]);
+  }, [obligations, filterStatus, filterType, filterAgreement, sortDescriptor, searchQuery]);
 
   const handleEdit = (id: number) => {
-    console.log("Edit agreement:", id);
+    console.log("Edit obligation:", id);
   };
 
   const handleDelete = async (id: number) => {
     try {
-      await agreementsApi.delete(id);
-      setAgreements(agreements.filter((agreement) => agreement.id !== id));
+      await obligationsApi.delete(id);
+      setObligations(obligations.filter((obligation) => obligation.id !== id));
       showAlert({
         title: "Success",
-        description: "Agreement deleted successfully",
+        description: "Obligation deleted successfully",
         color: "success",
       });
     } catch (error) {
-      console.error("Failed to delete agreement:", error);
+      console.error("Failed to delete obligation:", error);
       showAlert({
         title: "Error",
-        description: "Failed to delete agreement",
+        description: "Failed to delete obligation",
         color: "error",
       });
     }
   };
 
-  const handleStatusChange = async (id: number, newStatus: AgreementStatus) => {
+  const handleStatusChange = async (id: number, newStatus: ObligationStatus) => {
     try {
-      await agreementsApi.update(id, { status: newStatus });
-      setAgreements(
-        agreements.map((agreement) =>
-          agreement.id === id ? { ...agreement, status: newStatus } : agreement
+      await obligationsApi.update(id, { status: newStatus });
+      setObligations(
+        obligations.map((obligation) =>
+          obligation.id === id ? { ...obligation, status: newStatus } : obligation
         )
       );
       showAlert({
@@ -285,7 +310,10 @@ const AgreementPage = () => {
 
   const handleCreate = () => {
     setFormTitle("");
-    setSelectedOpportunityId(null);
+    setFormStatus("pending");
+    setFormForecastedDate("");
+    setFormType("deliverable");
+    setSelectedAgreementId(null);
     setIsModalOpen(true);
   };
 
@@ -294,47 +322,41 @@ const AgreementPage = () => {
   };
 
   const handleSubmit = async () => {
-    if (!formTitle || !selectedOpportunityId) {
+    if (!formTitle || !formForecastedDate || !selectedAgreementId) {
       showAlert({
         title: "Validation Error",
-        description: "Please fill in all fields",
-        color: "warning",
-      });
-      return;
-    }
-
-    const selectedOpportunity = opportunities.find(o => o.id === selectedOpportunityId);
-    if (!selectedOpportunity || !selectedOpportunity.alliance_id) {
-      showAlert({
-        title: "Validation Error",
-        description: "Selected opportunity must have an alliance",
+        description: "Please fill in all required fields",
         color: "warning",
       });
       return;
     }
 
     try {
-      const newAgreement = await agreementsApi.create({
+      const newObligation = await obligationsApi.create({
         title: formTitle,
-        opportunity_id: selectedOpportunityId,
-        alliance_id: selectedOpportunity.alliance_id,
-        status: "draft",
+        status: formStatus,
+        forecasted_date: formForecastedDate,
+        agreement_id: selectedAgreementId,
+        type: formType,
       });
 
-      setAgreements([...agreements, newAgreement]);
+      setObligations([...obligations, newObligation]);
       setFormTitle("");
-      setSelectedOpportunityId(null);
+      setFormStatus("pending");
+      setFormForecastedDate("");
+      setFormType("deliverable");
+      setSelectedAgreementId(null);
       setIsModalOpen(false);
       showAlert({
         title: "Success",
-        description: "Agreement created successfully",
+        description: "Obligation created successfully",
         color: "success",
       });
     } catch (error) {
-      console.error("Failed to create agreement:", error);
+      console.error("Failed to create obligation:", error);
       showAlert({
         title: "Error",
-        description: "Failed to create agreement",
+        description: "Failed to create obligation",
         color: "error",
       });
     }
@@ -346,11 +368,11 @@ const AgreementPage = () => {
       case 'status':
         setFilterStatus([]);
         break;
-      case 'opportunity':
-        setFilterOpportunity([]);
+      case 'type':
+        setFilterType([]);
         break;
-      case 'alliance':
-        setFilterAlliance([]);
+      case 'agreement':
+        setFilterAgreement([]);
         break;
     }
   };
@@ -360,19 +382,19 @@ const AgreementPage = () => {
       case 'status':
         setFilterStatus(values);
         break;
-      case 'opportunity':
-        setFilterOpportunity(values);
+      case 'type':
+        setFilterType(values);
         break;
-      case 'alliance':
-        setFilterAlliance(values);
+      case 'agreement':
+        setFilterAgreement(values);
         break;
     }
   };
 
   const handleClearAllFilters = () => {
     setFilterStatus([]);
-    setFilterOpportunity([]);
-    setFilterAlliance([]);
+    setFilterType([]);
+    setFilterAgreement([]);
   };
 
   const handleApplyFilters = () => {
@@ -405,14 +427,14 @@ const AgreementPage = () => {
               <div className="relative w-full max-w-120 overflow-hidden rounded-2xl bg-primary shadow-xl">
                 <div className="flex flex-col gap-5 px-6 py-6">
                   <Heading slot="title" className="text-lg font-semibold text-primary">
-                    Create Agreement
+                    Create Obligation
                   </Heading>
 
                   {/* Form fields */}
                   <div className="flex flex-col gap-4">
                     <Input
-                      label="Agreement Title"
-                      placeholder="Enter agreement title"
+                      label="Obligation Title"
+                      placeholder="Enter obligation title"
                       size="md"
                       className="w-full"
                       value={formTitle}
@@ -421,22 +443,65 @@ const AgreementPage = () => {
 
                     <Dropdown.Root>
                       <Button iconTrailing={ChevronDown} color="secondary" size="md" className="w-full justify-between">
-                        {selectedOpportunityId
-                          ? opportunities.find(o => o.id === selectedOpportunityId)?.title
-                          : "Select Opportunity"}
+                        {selectedAgreementId
+                          ? agreements.find(a => a.id === selectedAgreementId)?.title
+                          : "Select Agreement"}
                       </Button>
                       <Dropdown.Popover>
                         <Dropdown.Menu>
-                          {opportunities.map((opportunity) => (
+                          {agreements.map((agreement) => (
                             <Dropdown.Item
-                              key={opportunity.id}
-                              label={opportunity.title}
-                              onAction={() => setSelectedOpportunityId(opportunity.id)}
+                              key={agreement.id}
+                              label={agreement.title}
+                              onAction={() => setSelectedAgreementId(agreement.id)}
                             />
                           ))}
                         </Dropdown.Menu>
                       </Dropdown.Popover>
                     </Dropdown.Root>
+
+                    <Dropdown.Root>
+                      <Button iconTrailing={ChevronDown} color="secondary" size="md" className="w-full justify-between">
+                        {obligationTypeOptions.find(t => t.value === formType)?.label || "Select Type"}
+                      </Button>
+                      <Dropdown.Popover>
+                        <Dropdown.Menu>
+                          {obligationTypeOptions.map((type) => (
+                            <Dropdown.Item
+                              key={type.value}
+                              label={type.label}
+                              onAction={() => setFormType(type.value)}
+                            />
+                          ))}
+                        </Dropdown.Menu>
+                      </Dropdown.Popover>
+                    </Dropdown.Root>
+
+                    <Dropdown.Root>
+                      <Button iconTrailing={ChevronDown} color="secondary" size="md" className="w-full justify-between">
+                        {obligationStatusOptions.find(s => s.value === formStatus)?.label || "Select Status"}
+                      </Button>
+                      <Dropdown.Popover>
+                        <Dropdown.Menu>
+                          {obligationStatusOptions.map((status) => (
+                            <Dropdown.Item
+                              key={status.value}
+                              label={status.label}
+                              onAction={() => setFormStatus(status.value)}
+                            />
+                          ))}
+                        </Dropdown.Menu>
+                      </Dropdown.Popover>
+                    </Dropdown.Root>
+
+                    <Input
+                      label="Forecasted Date"
+                      placeholder="YYYY-MM-DD"
+                      size="md"
+                      className="w-full"
+                      value={formForecastedDate}
+                      onChange={setFormForecastedDate}
+                    />
                   </div>
 
                   <div className="flex justify-end gap-3 pt-4">
@@ -444,7 +509,7 @@ const AgreementPage = () => {
                       Cancel
                     </Button>
                     <Button size="md" onClick={handleSubmit}>
-                      Create Agreement
+                      Create Obligation
                     </Button>
                   </div>
                 </div>
@@ -459,9 +524,9 @@ const AgreementPage = () => {
 
       <div className="main-content flex-1 flex flex-col overflow-y-auto px-8 gap-4">
         <HubHeader
-          title="Agreements"
+          title="Obligations"
           primaryButtonLabel="Create"
-          badgeCount={agreements.length}
+          badgeCount={obligations.length}
           onAction1={handleCreate}
           onAction2={() => setIsFilterOpen(true)}
           searchValue={searchQuery}
@@ -478,16 +543,17 @@ const AgreementPage = () => {
 
         <TableCard.Root>
           <Table
-            aria-label="Agreements"
+            aria-label="Obligations"
             selectionMode="multiple"
             sortDescriptor={sortDescriptor}
             onSortChange={setSortDescriptor}
           >
             <Table.Header>
-              <Table.Head id="title" label="Agreement Title" allowsSorting />
-              <Table.Head id="opportunity" label="Opportunity" allowsSorting />
-              <Table.Head id="alliance" label="Alliance" allowsSorting />
-              <Table.Head id="status" label="Status" />
+              <Table.Head id="title" label="Title" allowsSorting />
+              <Table.Head id="status" label="Status" allowsSorting />
+              <Table.Head id="forecasted_date" label="Forecasted Date" allowsSorting />
+              <Table.Head id="agreement" label="Agreement Name" allowsSorting />
+              <Table.Head id="type" label="Type" allowsSorting />
               <Table.Head id="actions" label="Actions" />
             </Table.Header>
 
@@ -505,39 +571,35 @@ const AgreementPage = () => {
                     </div>
                   </Table.Cell>
                   <Table.Cell>
-                    {item.opportunity ? (
-                      <div>
-                        <p className="text-sm text-secondary">
-                          {item.opportunity.title}
-                        </p>
-                        <p className="text-xs text-tertiary">
-                          ID: {item.opportunity.id}
-                        </p>
-                      </div>
-                    ) : (
-                      <span className="text-sm text-tertiary">No opportunity</span>
-                    )}
-                  </Table.Cell>
-                  <Table.Cell>
-                    {item.alliance ? (
-                      <div>
-                        <p className="text-sm text-secondary">
-                          {item.alliance.title}
-                        </p>
-                        <p className="text-xs text-tertiary">
-                          ID: {item.alliance.id}
-                        </p>
-                      </div>
-                    ) : (
-                      <span className="text-sm text-tertiary">No alliance</span>
-                    )}
-                  </Table.Cell>
-                  <Table.Cell>
                     <StatusBadgeDropdown
                       value={item.status}
-                      options={agreementStatusOptions}
+                      options={obligationStatusOptions}
                       onChange={(newStatus) => handleStatusChange(item.id, newStatus)}
                     />
+                  </Table.Cell>
+                  <Table.Cell>
+                    <p className="text-sm text-secondary">
+                      {new Date(item.forecasted_date).toLocaleDateString()}
+                    </p>
+                  </Table.Cell>
+                  <Table.Cell>
+                    {item.agreement ? (
+                      <div>
+                        <p className="text-sm text-secondary">
+                          {item.agreement.title}
+                        </p>
+                        <p className="text-xs text-tertiary">
+                          ID: {item.agreement.id}
+                        </p>
+                      </div>
+                    ) : (
+                      <span className="text-sm text-tertiary">No agreement</span>
+                    )}
+                  </Table.Cell>
+                  <Table.Cell>
+                    <p className="text-sm text-secondary capitalize">
+                      {item.type}
+                    </p>
                   </Table.Cell>
                   <Table.Cell className="px-4">
                     <div className="flex justify-end gap-1">
@@ -602,22 +664,22 @@ const AgreementPage = () => {
                     />
                   )}
 
-                  {activeFilterScreen === 'opportunity' && (
+                  {activeFilterScreen === 'type' && (
                     <MultiSelectFilter
-                      title="Opportunity"
-                      options={opportunityFilterOptions}
-                      selectedValues={filterOpportunity}
-                      onChange={setFilterOpportunity}
+                      title="Type"
+                      options={typeFilterOptions}
+                      selectedValues={filterType}
+                      onChange={setFilterType}
                       onBack={handleBackToMain}
                     />
                   )}
 
-                  {activeFilterScreen === 'alliance' && (
+                  {activeFilterScreen === 'agreement' && (
                     <MultiSelectFilter
-                      title="Alliance"
-                      options={allianceFilterOptions}
-                      selectedValues={filterAlliance}
-                      onChange={setFilterAlliance}
+                      title="Agreement"
+                      options={agreementFilterOptions}
+                      selectedValues={filterAgreement}
+                      onChange={setFilterAgreement}
                       onBack={handleBackToMain}
                     />
                   )}
@@ -642,4 +704,4 @@ const AgreementPage = () => {
   );
 };
 
-export default AgreementPage;
+export default ObligationPage;
