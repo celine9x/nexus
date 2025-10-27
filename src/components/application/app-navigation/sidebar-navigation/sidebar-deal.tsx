@@ -1,8 +1,12 @@
 import { SidebarNavigationSectionsSubheadings } from "./sidebar-sections-subheadings";
-import { Home02, CheckDone01, File05, PieChart03, Rows01 } from "@untitledui/icons";
+import { Home02, CheckDone01, File05, PieChart03, Rows01, Users01 } from "@untitledui/icons";
 import { Badge } from "@/components/base/badges/badges";
 import type { NavItemType } from "@/components/application/app-navigation/config";
 import { useLocation } from "react-router";
+import { ScrollIcon, HandshakeIcon } from "@phosphor-icons/react";
+import { DocumentIcon, FolderIcon, ShareIcon, ChartBarIcon, HomeIcon, BuildingOfficeIcon, UserIcon, CalendarIcon } from "@heroicons/react/24/outline";
+
+// Custom SVG Icon component, declared FIRST
 
 
 const navItemsWithSectionsSubheadings: Array<{ label: string; items: NavItemType[] }> = [
@@ -54,7 +58,7 @@ const navItemsWithSectionsSubheadings: Array<{ label: string; items: NavItemType
       {
         label: "Agreements",
         href: "/agreement",
-        icon: AgreementIcon,
+        icon: Users01,
       },
           {
         label: "Obligations",
@@ -92,7 +96,6 @@ const navItemsWithSectionsSubheadings: Array<{ label: string; items: NavItemType
 
 const SidebarDeal = () => {
   const location = useLocation();
-  
 
   return (
     <div className="sidebar w-max bg-secondary flex-start">
