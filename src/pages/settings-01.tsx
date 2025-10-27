@@ -261,7 +261,7 @@ export const Settings01 = () => {
                             <div className="grid grid-cols-1 lg:grid-cols-[minmax(200px,280px)_minmax(400px,512px)] lg:gap-8">
                                 <SectionLabel.Root isRequired size="sm" title="Email address" className="max-lg:hidden" />
 
-                                <TextField isRequired name="email" type="email" defaultValue="linhngx9@gmail.com">
+                                <TextField isRequired name="email" type="email" defaultValue="linhngx9@hello.com">
                                     <Label className="lg:hidden">Email address</Label>
                                     <InputBase size="md" icon={Mail01} />
                                 </TextField>
@@ -278,7 +278,7 @@ export const Settings01 = () => {
                                     tooltip="This is tooltip"
                                 />
                                 <div className="flex flex-col gap-5 lg:flex-row">
-                                    <Avatar size="2xl" src={uploadedAvatar || "https://www.untitledui.com/images/avatars/olivia-rhye?fm=webp&q=80"} />
+                                    <Avatar size="2xl" src={uploadedAvatar || "public/images/my-notion-face-portrait.png"} />
 
                                     <FileUpload.DropZone className="w-full" onDropFiles={(files) => handleAvatarUpload(files[0])} />
                                 </div>

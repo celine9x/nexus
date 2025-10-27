@@ -33,7 +33,7 @@ items: Array<{ label: string; items: NavItemType[] }>;
     const selectedAccount = {
         name: "Linh Nguyen",
         email: "linh.nguyen.com",
-        avatar: "https://www.untitledui.com/images/avatars/linh-nguyen?fm=webp&q=80",
+        avatar: "/images/my-notion-face-portrait.png",
         status: "online" as const,
     };
 

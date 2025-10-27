@@ -50,7 +50,7 @@ const trades = [
         status: "processing",
         author: {
             name: "Linh Nguyen",
-            email: "linhngx9@gmail.com",
+            email: "linhngx9@hello.com",
             avatarUrl: "https://www.untitledui.com/images/avatars/olivia-rhye?fm=webp&q=80",
             initials: "OR",
         },

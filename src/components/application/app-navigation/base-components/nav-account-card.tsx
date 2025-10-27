@@ -28,8 +28,8 @@ const placeholderAccounts: NavAccountType[] = [
     {
         id: "olivia",
         name: "Linh Nguyen",
-        email: "linhngx9@gmail.com",
-        avatar: "https://www.untitledui.com/images/avatars/olivia-rhye?fm=webp&q=80",
+        email: "linhngx9@hello.com",
+        avatar: "/images/my-notion-face-portrait.png",
         status: "online",
     },
     {

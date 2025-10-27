@@ -3,10 +3,6 @@ import { Home02, CheckDone01, File05, PieChart03, Rows01 } from "@untitledui/ico
 import { Badge } from "@/components/base/badges/badges";
 import type { NavItemType } from "@/components/application/app-navigation/config";
 import { useLocation } from "react-router";
-import { ScrollIcon, HandshakeIcon } from "@phosphor-icons/react";
-import { DocumentIcon } from "@heroicons/react/24/outline";
-import { AgreementIcon } from "../icons/AgreementIcon";
-
 
 
 const navItemsWithSectionsSubheadings: Array<{ label: string; items: NavItemType[] }> = [
@@ -16,17 +12,17 @@ const navItemsWithSectionsSubheadings: Array<{ label: string; items: NavItemType
       {
         label: "Home",
         href: "/",
-        icon: Home02,
+        icon: HomeIcon,
       },
       {
         label: "Dashboard",
         href: "/projects",
-        icon: Rows01,
+        icon: ChartBarIcon,
       },
       {
         label: "Network",
         href: "/documents",
-        icon: File05,
+        icon: ShareIcon,
       },
   
     ],
@@ -38,7 +34,7 @@ const navItemsWithSectionsSubheadings: Array<{ label: string; items: NavItemType
       {
         label: "Initiatives",
         href: "#",
-        icon: PieChart03,
+        icon: FolderIcon,
       },
       {
         label: "Opportunities",
@@ -74,18 +70,18 @@ const navItemsWithSectionsSubheadings: Array<{ label: string; items: NavItemType
       {
         label: "Companies",
         href: "#",
-        icon: PieChart03,
+        icon: BuildingOfficeIcon,
       },
       {
         label: "Contacts",
         href: "#",
-        icon: CheckDone01,
+        icon: UserIcon,
   
       },
             {
         label: "Meetings",
         href: "#",
-        icon: CheckDone01,
+        icon: CalendarIcon,
   
       },
     ],
