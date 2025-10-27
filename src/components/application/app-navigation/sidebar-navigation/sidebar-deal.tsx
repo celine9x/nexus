@@ -1,8 +1,12 @@
 import { SidebarNavigationSectionsSubheadings } from "./sidebar-sections-subheadings";
-import { Home02, CheckDone01, File05, PieChart03, Rows01, Users01 } from "@untitledui/icons";
+import { Home02, CheckDone01, File05, PieChart03, Rows01 } from "@untitledui/icons";
 import { Badge } from "@/components/base/badges/badges";
 import type { NavItemType } from "@/components/application/app-navigation/config";
 import { useLocation } from "react-router";
+import { ScrollIcon, HandshakeIcon } from "@phosphor-icons/react";
+import { DocumentIcon } from "@heroicons/react/24/outline";
+import { AgreementIcon } from "../icons/AgreementIcon";
+
 
 
 const navItemsWithSectionsSubheadings: Array<{ label: string; items: NavItemType[] }> = [
@@ -39,7 +43,7 @@ const navItemsWithSectionsSubheadings: Array<{ label: string; items: NavItemType
       {
         label: "Opportunities",
         href: "/opportunity",
-        icon: CheckDone01,
+        icon: DocumentIcon,
         badge: (
           <Badge size="sm" type="modern">
             8
@@ -49,17 +53,17 @@ const navItemsWithSectionsSubheadings: Array<{ label: string; items: NavItemType
       {
         label: "Alliances",
         href: "/alliance",
-        icon: Users01,
+        icon: HandshakeIcon,
       },
       {
         label: "Agreements",
         href: "/agreement",
-        icon: Users01,
+        icon: AgreementIcon,
       },
           {
         label: "Obligations",
         href: "/obligation",
-        icon: Users01,
+        icon: ScrollIcon,
       },
     ],
   },
@@ -92,6 +96,7 @@ const navItemsWithSectionsSubheadings: Array<{ label: string; items: NavItemType
 
 const SidebarDeal = () => {
   const location = useLocation();
+  
 
   return (
     <div className="sidebar w-max bg-secondary flex-start">
