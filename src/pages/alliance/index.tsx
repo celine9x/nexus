@@ -13,7 +13,6 @@ import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { alliancesApi, type AllianceWithRelations, type AllianceStatus } from "@/services/api";
-import { mockAlliancesWithRelations } from "@/services/mockData";
 import { useAlert } from "@/contexts/AlertContext";
 import { StatusBadgeDropdown, type StatusOption } from "@/components/application/status-badge-dropdown/status-badge-dropdown";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
@@ -56,11 +55,9 @@ const AlliancePage = () => {
         console.error("Failed to fetch alliances:", error);
         showAlert({
           title: "Error",
-          description: "Failed to load data from server, using mock data",
-          color: "warning",
+          description: "Failed to load data from server",
+          color: "error",
         });
-        // Fallback to mock data
-        setAlliancesWithRelations(mockAlliancesWithRelations);
       } finally {
         setLoading(false);
       }

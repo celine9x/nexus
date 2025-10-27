@@ -12,7 +12,6 @@ import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { opportunitiesApi, alliancesApi, type Opportunity, type Alliance, type OpportunityStatus } from "@/services/api";
-import { mockOpportunities, mockAlliances } from "@/services/mockData";
 import { useAlert } from "@/contexts/AlertContext";
 import { StatusBadgeDropdown, type StatusOption } from "@/components/application/status-badge-dropdown/status-badge-dropdown";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
@@ -61,12 +60,9 @@ const OpportunityPage = () => {
         console.error("Failed to fetch data:", error);
         showAlert({
           title: "Error",
-          description: "Failed to load data from server, using mock data",
-          color: "warning",
+          description: "Failed to load data from server",
+          color: "error",
         });
-        // Fallback to mock data
-        setOpportunities(mockOpportunities);
-        setAlliances(mockAlliances);
       } finally {
         setLoading(false);
       }

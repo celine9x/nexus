@@ -13,7 +13,6 @@ import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { agreementsApi, opportunitiesApi, alliancesApi, type Agreement, type Opportunity, type Alliance, type AgreementStatus } from "@/services/api";
-import { mockAgreements, mockOpportunities, mockAlliances } from "@/services/mockData";
 import { useAlert } from "@/contexts/AlertContext";
 import { StatusBadgeDropdown, type StatusOption } from "@/components/application/status-badge-dropdown/status-badge-dropdown";
 import { MultiSelectFilter, type FilterOption } from "@/components/application/filters/multi-select-filter";
@@ -66,13 +65,9 @@ const AgreementPage = () => {
         console.error("Failed to fetch data:", error);
         showAlert({
           title: "Error",
-          description: "Failed to load data from server, using mock data",
-          color: "warning",
+          description: "Failed to load data from server",
+          color: "error",
         });
-        // Fallback to mock data
-        setAgreements(mockAgreements);
-        setOpportunities(mockOpportunities);
-        setAlliances(mockAlliances);
       } finally {
         setLoading(false);
       }
